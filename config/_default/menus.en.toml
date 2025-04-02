@@ -1,0 +1,25 @@
+[[main]]
+none = "none"
+
+[[main]]
+name = "About"
+pageRef = "about"
+identifier = "60bfRqQ7JJ"
+weight = 9999
+
+[[main]]
+name = "Contact"
+pre = "envelope"
+pageRef = "contact"
+identifier = "bi34DtPLhY"
+weight = 9999
+
+[[main]]
+name = "New Site"
+pre = "github"
+pageRef = "newSite"
+identifier = "YMZMnfyRKK"
+weight = 9999
+
+[[footer]]
+none = "none"
