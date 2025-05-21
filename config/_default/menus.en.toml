@@ -1,0 +1,23 @@
+[[main]]
+none = "none"
+
+[[main]]
+name = "contact"
+pageRef = "pages/contact"
+identifier = "zAZiOGAGgT"
+weight = 9_999
+
+[[main]]
+name = "order"
+pageRef = "pages/order"
+identifier = "siZ1YVnTTl"
+weight = 9_999
+
+[[main]]
+name = "about"
+pageRef = "pages/about"
+identifier = "6P1trLf54g"
+weight = 9_999
+
+[[footer]]
+none = "none"
