@@ -6,9 +6,5 @@ description: "Contact Form"
 tags: ["contact", "contact form"]
 menu: main
 type: contact
-layout: single.contact
-showHero: true
-heroStyle: background
-featuredImage: "/images/background.png"
 ---
 

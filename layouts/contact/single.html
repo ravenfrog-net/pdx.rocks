@@ -1,56 +1,202 @@
 {{ define "main" }}
-<main class="prose dark:prose-invert max-w-prose mx-auto py-10">
+{{ .Scratch.Set "scope" "single" }}
 
-  <h1 class="text-4xl font-bold text-neutral-900 dark:text-neutral-100">{{ .Title }}</h1>
+<article>
+  {{ if .Params.showHero | default (.Site.Params.article.showHero | default false) }}
+  {{ $heroStyle := .Params.heroStyle }}
+  {{ if not $heroStyle }}{{ $heroStyle = .Site.Params.article.heroStyle }}{{ end }}
+  {{ $heroStyle := print "hero/" $heroStyle ".html" }}
+  {{ if templates.Exists ( printf "partials/%s" $heroStyle ) }}
+  {{ partial $heroStyle . }}
+  {{ else }}
+  {{ partial "hero/basic.html" . }}
+  {{ end }}
+  {{ end }}
 
-  <form name="contact" action="/contact-thank-you/" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="space-y-6 mt-8">
-    <input type="hidden" name="form-name" value="contact" />
-    
-    <!-- Honeypot -->
-    <p class="hidden">
-      <label>
-        Don’t fill this out if you're human: <input name="bot-field" />
-      </label>
-    </p>
-
-    <!-- Name -->
-    <div>
-      <label for="contact-form-name" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Name</label>
-      <input type="text" name="Name" id="contact-form-name" required maxlength="100" autocomplete="off"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-white focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+  <header id="single_header" class="mt-5 max-w-prose">
+    {{ if .Params.showBreadcrumbs | default (.Site.Params.article.showBreadcrumbs | default false) }}
+    {{ partial "breadcrumbs.html" . }}
+    {{ end }}
+    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">
+      {{ .Title | emojify }}
+    </h1>
+    <div class="mt-1 mb-6 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+      {{ partial "article-meta/basic.html" (dict "context" . "scope" "single") }}
     </div>
 
-    <!-- Email -->
-    <div>
-      <label for="contact-form-email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Email</label>
-      <input type="email" name="Email" id="contact-form-email" required maxlength="100" autocomplete="off"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-white focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-    </div>
+    {{ $authorsData := .Site.Data.authors }}
+    {{ $taxonomies := .Site.Taxonomies.authors }}
+    {{ $baseURL := .Site.BaseURL }}
+    {{ $taxonomyLink := 0 }}
+    {{ $showAuthor := 0 }}
 
-    <!-- Subject -->
-    <div>
-      <label for="contact-form-subject" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Subject</label>
-      <input type="text" name="Subject" id="contact-form-subject" required maxlength="200" autocomplete="off"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-white focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-    </div>
+    {{ if not (strings.HasSuffix $baseURL "/") }}
+    {{ $baseURL = delimit (slice $baseURL "/") "" }}
+    {{ end }}
 
-    <!-- Message -->
-    <div>
-      <label for="contact-form-message" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Message</label>
-      <textarea name="Message" id="contact-form-message" rows="6" required
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-white focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-        placeholder="What's up?"></textarea>
-    </div>
+    {{ if not (.Params.showAuthorBottom | default ( .Site.Params.article.showAuthorBottom | default false)) }}
 
-    <!-- Submit -->
-    <div>
-      <button type="submit"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-        Send
-      </button>
-    </div>
-  </form>
+    {{ if .Params.showAuthor | default (.Site.Params.article.showAuthor | default true) }}
+    {{ $showAuthor = 1 }}
+    {{ partial "author.html" . }}
+    {{ end }}
 
-</main>
+    {{ range $author := .Page.Params.authors }}
+    {{ $authorData := index $authorsData $author }}
+    {{- if $authorData -}}
+    {{ range $taxonomyname, $taxonomy := $taxonomies }}
+    {{ if (eq $taxonomyname $author) }}
+    {{ $taxonomyLink = delimit (slice $baseURL "authors/" $author "/") "" }}
+    {{ end }}
+    {{ end }}
+
+    {{ $finalLink := $taxonomyLink }}
+    {{ $currentLang := $.Site.Language.Lang }}
+    {{ if eq $.Site.LanguagePrefix "" }}
+    {{ $finalLink = printf "%sauthors/%s/" $baseURL $author }}
+    {{ else }}
+    {{ $finalLink = printf "%s%s/authors/%s/" $baseURL $currentLang $author }}
+    {{ end }}
+
+    {{ partial "author-extra.html" (dict "context" . "data" $authorData "link" $finalLink) }}
+    {{- end -}}
+    {{ end }}
+
+    {{ if or $taxonomyLink $showAuthor }}
+    <div class="mb-5"></div>
+    {{ end }}
+
+    {{ end }}
+
+  </header>
+
+  <section class="flex flex-col max-w-full mt-0 prose dark:prose-invert lg:flex-row">
+
+    {{ if or (and (.Params.showTableOfContents | default (.Site.Params.article.showTableOfContents | default false)) (in
+    .TableOfContents "<ul")) (.Site.Params.article.showRelatedPosts | default false) }} <div
+      class="order-first lg:ml-auto px-0 lg:order-last ltr:lg:pl-8 rtl:lg:pr-8">
+      <div class="toc ltr:pl-5 rtl:pr-5 print:hidden lg:sticky {{ if hasPrefix .Site.Params.header.layout " fixed" -}}
+        lg:top-[140px]{{ else }}lg:top-10{{ end }}">
+
+        {{ if and (.Params.showTableOfContents | default (.Site.Params.article.showTableOfContents | default false)) (in
+        .TableOfContents "<ul") }} {{ partial "toc.html" . }} {{ end }} {{ if .Site.Params.article.showRelatedPosts |
+          default false }} sd {{ end }} </div>
+      </div>
+      {{ end }}
+
+      <div class="min-w-0 min-h-0 max-w-fit">
+
+        {{ partial "series/series.html" . }}
+
+        <div class="article-content max-w-prose mb-20">
+          <form name="contact" class="contact-form width-normal" action="/contact-thank-you/" method="POST"
+            data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="contact" />
+            <p class="hidden">
+              <label><input name="bot-field" /></label>
+            </p>
+            <div class="form-group">
+              <!-- Text input-->
+              <label class="contact-form-1 control-label" for="Name"></label>
+              <div class="contact-form-1">
+                <input id="contact-form-name" name="Name" type="text" placeholder="Name" class="form-control input-md"
+                  required="" autocomplete="off" maxlength="100">
+              </div>
+              <!-- Text input-->
+              <label class="contact-form-1 control-label" for="Email"></label>
+              <div class="contact-form-1">
+                <input id="contact-form-email" name="Email" type="email" placeholder="Email"
+                  class="form-control input-md" required="" autocomplete="off" maxlength="100">
+              </div>
+              <!-- Text input-->
+              <label class="contact-form-1 control-label" for="Subject"></label>
+              <div class="contact-form-1">
+                <input id="contact-form-subject" name="Subject" type="text" placeholder="Subject"
+                  class="form-control input-md" required="" autocomplete="off" maxlength="200">
+              </div>
+              <!-- Textarea -->
+              <label class="contact-form-1 control-label" for=""></label>
+              <textarea class="form-control" id="contact-form-message" name="Message" placeholder="What's up?"
+                rows="8"></textarea>
+              <!-- Button -->
+              <button class="contact-button" type="submit" value="Submit" id="Form-submit">Submit</button>
+            </div>
+          </form>
+          {{ $defaultReplyByEmail := .Site.Params.replyByEmail }}
+          {{ $replyByEmail := default $defaultReplyByEmail .Params.replyByEmail }}
+          {{ if $replyByEmail }}
+          <strong class="block mt-8">
+            <a target="_blank"
+              class="m-1 rounded bg-neutral-300 p-1.5 text-neutral-700 hover:bg-primary-500 hover:text-neutral dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-primary-400 dark:hover:text-neutral-800"
+              href="mailto:{{ .Site.Params.Author.email }}?subject={{ replace (printf " Reply to %s" .Title) "\"" "'" }}">
+                Reply by Email
+              </a>
+            </strong>
+          {{ end }}
+        </div>
+        
+        {{ if (.Params.showAuthorBottom | default ( .Site.Params.article.showAuthorBottom | default false)) }}
+
+          {{ if .Params.showAuthor | default (.Site.Params.article.showAuthor | default true) }}
+            {{ $showAuthor = 1 }}
+            {{ partial "author.html" . }}
+          {{ end }}
+
+          {{ range $author := .Page.Params.authors }}
+            {{ $authorData := index $authorsData $author }}
+            {{- if $authorData -}}
+              {{ range $taxonomyname, $taxonomy := $taxonomies }}
+                {{ if (eq $taxonomyname $author) }}
+                  {{ $taxonomyLink = delimit (slice $baseURL "authors/" $author "/") "" }}
+                {{ end }}
+              {{ end }}
+              {{ partial "author-extra.html" (dict "context" . "data" $authorData "link" $taxonomyLink) }}
+            {{- end -}}
+          {{ end }}
+
+          {{ if or $taxonomyLink $showAuthor }}
+          <div class="mb-10"></div>
+          {{ end }}
+
+        {{ end }}
+
+        {{ partial "series/series-closed.html" . }}
+        {{ partial "sharing-links.html" . }}
+        {{ partial "related.html" . }}  
+      </div>
+     
+      {{ $translations := .AllTranslations }}
+      {{ with .File }}
+        {{ $path := .Path }}
+        {{range $translations}}
+          {{ $lang := print "."  .Lang  ".md" }}
+          {{ $path = replace $path $lang ".md" }}
+        {{end}}
+      <script>
+        var oid = "views_{{ $path }}"
+        var oid_likes = "likes_{{ $path }}"
+      </script>
+      {{ $jsPage := resources.Get "js/page.js" }}
+      {{ $jsPage = $jsPage | resources.Minify | resources.Fingerprint "sha512" }}
+      <script type="text/javascript" src="{{ $jsPage.RelPermalink }}" integrity="{{ $jsPage.Data.Integrity }}"></script>
+      {{ end }}
+  
+    </section>
+  <footer class="pt-8 max-w-prose print:hidden">
+
+    {{ partial "article-pagination.html" . }}
+    {{ if .Params.showComments | default (.Site.Params.article.showComments | default false) }}
+    {{ if templates.Exists "partials/comments.html" }}
+    <div class="pt-3">
+      <hr class="border-dotted border-neutral-300 dark:border-neutral-600" />
+      <div class="pt-3">
+        {{ partial "comments.html" . }}
+      </div>
+    </div>
+    {{ else }}
+    {{ warnf "[BLOWFISH] Comments are enabled for %s but no comments partial exists." .File.Path }}
+    {{ end }}
+    {{ end }}
+  </footer>
+</article>
 {{ end }}
-
