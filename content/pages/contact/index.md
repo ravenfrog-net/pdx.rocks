@@ -6,5 +6,6 @@ description: "Contact Form"
 tags: ["contact", "contact form"]
 menu: main
 type: contact
+layout: single.contact
 ---
-# Contact Form
+
