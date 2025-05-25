@@ -9,6 +9,6 @@ type: contact
 layout: single.contact
 showHero: true
 heroStyle: background
-featuredImage: "background.png"
+featuredImage: "/images/background.png"
 ---
 
